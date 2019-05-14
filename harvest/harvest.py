@@ -22,7 +22,7 @@
 import tweepy
 import requests
 import json
-import time
+import time, os
 from queue import Queue
 from threading import Thread
 
@@ -73,7 +73,7 @@ class MyStreamListener(tweepy.StreamListener):
         if (response.status_code != 201):
             print(time.strftime("%a, %d %b %Y %H:%M:%S +0000") + " Error in insertDB (" + str(response.status_code) + ") " +
                   str(response.json()) + "[" + str(status.id) + "]")
-            if (response.status_code != 201):
+            if (response.status_code == 409):
                 self.duplicate_error += 1
             else:
                 self.error += 1
@@ -93,14 +93,14 @@ class MyStreamListener(tweepy.StreamListener):
         return False
 
 
-# Database Connection Configuration
-#BASE_URL = 'http://172.26.38.57:5984'
-# Put on the assumption that the harvester will run in the same instance where couchdb is hosted
-harvestconfigfilepath = "harvestconfig.json"
+# read absulte path as required in ansible
+harvestconfigfilepath = os.path.join(os.path.dirname(os.path.realpath(__file__)), "harvestconfig.json")
 
 with open(harvestconfigfilepath, "r") as read_file:
     harvestconfig = json.load(read_file)
 
+# Database Connection Configuration
+#BASE_URL = 'http://172.26.38.57:5984'
 BASE_URL = harvestconfig["couchdb"]["baseurl"]
 USERNAME = harvestconfig["couchdb"]["user"]
 PASSWORD = harvestconfig["couchdb"]["password"]
